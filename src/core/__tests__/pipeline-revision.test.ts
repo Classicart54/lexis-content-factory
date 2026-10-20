@@ -494,3 +494,19 @@ function countWords(text: string): number {
 function countAccents(text: string): number {
   return (text.match(/\*\*[^*]+\*\*/g) || []).length + (text.match(/==[^=]+==/g) || []).length;
 }
+
+test('temporary publication quota preserves approval for the next scheduled run', async () => {
+  const dataDir = await mkdtemp(join(tmpdir(), 'lexis-quota-test-'));
+  try {
+    const store = new ArtifactStore(dataDir);
+    const agents = revisionAgents();
+    agents.publishMaterial = async (request) => ({ requestId: request.id, ok: false, statusCode: 429, issues: [{ code: 'publication_wave_limit', severity: 'error', owner: 'system', message: 'Daily limit reached' }], summary: 'Daily limit reached', publishedAt: new Date().toISOString() });
+    const pipeline = new ContentPipeline(store, agents);
+    const request = await pipeline.createRequest({ brief: { inputType: 'planned_topic', title: 'Test', cluster: 'test', materialKind: 'guide', goal: 'Test quota', knownFacts: '', forbiddenMentions: '', internalLinks: '/' } });
+    await store.writeArtifact(request.id, 'assembled', sampleDraft());
+    await store.updateRequest({ ...request, status: 'approved' });
+    await assert.rejects(pipeline.runNext(request.id), /Publication deferred/);
+    assert.equal((await store.findRequest(request.id))?.status, 'approved');
+    assert.equal((await store.readArtifacts(request.id)).revision, undefined);
+  } finally { await rm(dataDir, { recursive: true, force: true }); }
+});

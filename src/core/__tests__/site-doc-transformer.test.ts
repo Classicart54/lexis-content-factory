@@ -61,3 +61,13 @@ test('legacy format preserves examples, takeaways and expert attribution', async
   assert.deepEqual(doc.blocks[0].paragraphs, ['Слова клиента', 'Ответ: Слова менеджера']);
   assert.equal(doc.blocks[2].author, 'Эксперт');
 });
+
+test('publication uses the canonical request cluster rather than a stale draft seed keyword', () => {
+  const request = sampleRequest();
+  assert.equal(request.brief.inputType, 'planned_topic');
+  if (request.brief.inputType === 'planned_topic') request.brief.cluster = 'Ошибки новичков на этапах продаж';
+  const draft = sampleDraft();
+  draft.meta.cluster = 'этапы продаж';
+  const doc = toSiteDoc(request, draft);
+  assert.equal(doc.meta.cluster, 'Ошибки новичков на этапах продаж');
+});

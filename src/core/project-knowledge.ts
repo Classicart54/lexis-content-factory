@@ -313,6 +313,9 @@ function normalizeContentPlanTopics(topics: TopicQueueItem[], wave1Slugs: string
     return {
       ...legacy,
       ...topic,
+      // Content-plan subtopics share broad seed keywords with their hub.
+      // Their publication identity is the specific editorial question.
+      cluster: publicationClusterForTopic(topic),
       sourceFile: 'content-plan-guides.json',
       editorialType: topic.editorialType || inferEditorialType(topic),
       intent: topic.intent || inferIntent(topic),
@@ -323,6 +326,12 @@ function normalizeContentPlanTopics(topics: TopicQueueItem[], wave1Slugs: string
       demand: topic.demand || legacy?.demand || null,
     };
   });
+}
+
+export function publicationClusterForTopic(topic: TopicQueueItem): string {
+  return topic.role === 'sub'
+    ? (topic.h1 || topic.question || topic.cluster).trim().replace(/[?!.]+$/u, '')
+    : topic.cluster;
 }
 
 function mergeTopics(contentPlanTopics: TopicQueueItem[], legacyTopics: TopicQueueItem[]): TopicQueueItem[] {

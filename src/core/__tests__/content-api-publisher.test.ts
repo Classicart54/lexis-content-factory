@@ -144,3 +144,13 @@ test('reports successful publication only after checking the public page', async
     assert.equal(calls, 2);
   } finally { globalThis.fetch = original; }
 });
+
+test('occupied cluster is an editorial conflict and never requests new fact collection', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ error: 'validation_failed', problems: ['кластер «этапы продаж» уже занят страницей /guides/etapy-prodazh'] }, { status: 422 });
+  try {
+    const report = await new ContentApiPublisher({ apiUrl: 'http://localhost/api/content', apiToken: 'test' }).publish(sampleRequest(), sampleDraft());
+    assert.equal(report.issues[0].code, 'publication_cluster_occupied');
+    assert.equal(report.issues[0].owner, 'system');
+  } finally { globalThis.fetch = original; }
+});

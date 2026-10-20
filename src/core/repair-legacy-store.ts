@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { readdir, readFile, writeFile, rename, stat, utimes } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { toLegacySiteDoc, type SiteDoc } from './site-doc-transformer.js';
@@ -24,8 +24,12 @@ for (const name of await readdir(join(root, 'guide'))) {
     continue;
   }
   if (apply) {
+    const timestamps = await stat(path);
     await writeFile(path + '.tmp', JSON.stringify(doc, null, 2) + '\n');
     await rename(path + '.tmp', path);
+    // The landing daily quota uses filesystem mtime. A format repair is not
+    // a new publication and must preserve the original publication timestamp.
+    await utimes(path, timestamps.atime, timestamps.mtime);
   }
   repaired++;
   console.log(JSON.stringify({ file: name, applied: apply }));

@@ -95,8 +95,12 @@ if (!report.ok) process.exitCode = 1;
 
 async function syncTopicQueueWithRequests(): Promise<void> {
   for (const item of await topicQueue.list()) {
-    const request = await store.findRequest(item.requestId);
+    let request = await store.findRequest(item.requestId);
     if (!request) continue;
+    const topic = findTopicBySlug(knowledge, item.slug);
+    if (topic && request.brief.inputType === 'planned_topic' && ['brief_draft', 'needs_facts'].includes(request.status) && request.brief.cluster !== topic.cluster) {
+      request = await store.updateRequest({ ...request, brief: { ...request.brief, cluster: topic.cluster }, notes: [...request.notes, 'Publication cluster aligned with the specific content-plan question; seed keywords remain in the brief.'] });
+    }
     if (request.status === 'monitoring') {
       const publicationReport = (await store.readArtifacts(item.requestId)).publicationReport;
       await topicQueue.update(item.requestId, { status: 'done', publishedUrl: publicationReport?.url || item.publishedUrl, note: publicationReport?.summary || item.note });

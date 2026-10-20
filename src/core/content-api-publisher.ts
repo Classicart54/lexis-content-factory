@@ -104,6 +104,7 @@ function issuesFromContentApi(status: number, body: ContentApiResponse): Validat
 }
 
 function codeForProblem(problem: string, index: number): string {
+  if (/кластер.*уже занят/iu.test(problem)) return 'publication_cluster_occupied';
   if (/выделени|жирн|маркер|сплошное полотно/iu.test(problem)) return 'publication_not_enough_accents';
   if (/\b\d+\s+слов|максимум\s+\d+|длиннее/iu.test(problem)) return 'publication_word_count_high';
   if (/хаб|parent|сирот/iu.test(problem)) return 'publication_parent_unpublished';
@@ -122,6 +123,7 @@ function publicationHint(body: ContentApiResponse): string {
 }
 
 function ownerForProblem(problem: string): ValidationIssue['owner'] {
+  if (/кластер.*уже занят/iu.test(problem)) return 'system';
   if (/источник|факт|кластер|provenance|снимк/iu.test(problem)) return 'facts';
   if (/section|parent|хаб|раздел|lead|faq|related|блок|структур/iu.test(problem)) return 'structure';
   return 'writer';

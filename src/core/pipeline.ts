@@ -159,6 +159,11 @@ export class ContentPipeline {
           const report = await this.agents.publishMaterial(request, finalDoc);
           await this.store.writeArtifact(request.id, 'publicationReport', report);
           if (!report.ok) {
+            if (report.statusCode === 429) {
+              // A daily wave limit is temporary. Preserve approval so the next
+              // scheduled run can publish without regenerating the article.
+              throw new Error(`Publication deferred until the daily quota resets: ${report.summary}`);
+            }
             if (artifacts.facts && artifacts.structure && canAutofixValidationIssues(report.issues)) {
               const fixed = cleanupDraftStyle(applyValidationAutofixes(request, artifacts.facts, artifacts.structure, finalDoc, report.issues));
               await this.store.writeArtifact(request.id, 'assembled', fixed);

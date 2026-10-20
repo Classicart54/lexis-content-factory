@@ -21,9 +21,9 @@ export function toSiteDoc(request: PipelineRequest, draft: DraftDoc, options: { 
       updatedAt: today,
       publishedAt: today,
       author: draft.meta.author || { name: 'Команда Lexis Voice', kind: 'organization' },
-      // Подготовленный meta.cluster уже содержит fallback на slug — бриф с
-      // пустым кластером не должен затирать его null-ом.
-      cluster: draft.meta.cluster || (request.brief.inputType === 'planned_topic' ? request.brief.cluster || slug : undefined),
+      // Кластер заявки — канон редакционного вопроса. При пустом значении
+      // сохраняем подготовленный кластер черновика или slug.
+      cluster: (request.brief.inputType === 'planned_topic' ? request.brief.cluster : undefined) || draft.meta.cluster || slug,
       section,
       provenance: {
         requestId: request.id,
