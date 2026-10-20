@@ -416,3 +416,21 @@ function productLinkPositions(blocks: DraftDoc['blocks']): number[] {
     return hasProductLink ? [bodyIndex / denominator] : [];
   });
 }
+
+test('legacy preparation preserves complete lead and does not inject generic v2 editorial blocks', () => {
+  const previous = process.env.CONTENT_SCHEMA_VERSION;
+  process.env.CONTENT_SCHEMA_VERSION = '1';
+  try {
+    const draft = sampleDraft();
+    const lead = draft.blocks.find((b) => b.type === 'lead');
+    assert.ok(lead);
+    lead.text = 'Карта этапов помогает проверить следующий шаг сделки и найти конкретный момент, на котором разговор перестал продвигаться. Условие перехода проверяют по словам клиента и договорённости о следующем действии, сохраняя контекст разговора. Для каждой записи руководитель отмечает подтверждённую потребность, открытые вопросы и результат обсуждения.';
+    const before = lead.text;
+    const prepared = prepareSeoForPublication(sampleRequest(), sampleFacts(), sampleStructure(), draft);
+    assert.equal(prepared.blocks.find((b) => b.type === 'lead')?.text, before);
+    assert.equal(prepared.blocks.some((b) => String(b.id).startsWith('generated-example') || b.type === 'expert' || b.type === 'takeaways'), false);
+  } finally {
+    if (previous === undefined) delete process.env.CONTENT_SCHEMA_VERSION;
+    else process.env.CONTENT_SCHEMA_VERSION = previous;
+  }
+});

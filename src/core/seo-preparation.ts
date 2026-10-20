@@ -77,6 +77,9 @@ function removePseudoSourceProse(blocks: DraftBlock[]): DraftBlock[] {
 
 function normalizeGuideBlocks(blocks: DraftBlock[], request: PipelineRequest): DraftBlock[] {
   if (request.brief.inputType !== 'planned_topic' || request.brief.materialKind !== 'guide') return blocks;
+  // The legacy site renders the writer's existing blocks. Do not inject v2
+  // placeholder stories or attributed comments which semantic review rejects.
+  if (process.env.CONTENT_SCHEMA_VERSION === '1') return blocks;
   return moveTakeawaysToGuideEnd(distributeExpertBlock(distributeGuideExampleBlocks(ensureExpertBlock(ensureGuideExampleBlocks(capTakeaways(limitGuideLead(blocks)), request)))));
 }
 
@@ -168,7 +171,16 @@ function insertAfterIndex(blocks: DraftBlock[], index: number, block: DraftBlock
 function limitGuideLead(blocks: DraftBlock[]): DraftBlock[] {
   return blocks.map((block) => {
     if (block.type !== 'lead' || typeof block.text !== 'string' || block.text.length <= GUIDE_LEAD_MAX) return block;
-    return { ...block, text: limitText(block.text, GUIDE_LEAD_MAX) };
+    const sentences = block.text.match(/[^.!?]+[.!?]+/gu) || [];
+    let text = '';
+    for (const sentence of sentences) {
+      const candidate = `${text} ${sentence.trim()}`.trim();
+      if (candidate.length > GUIDE_LEAD_MAX) break;
+      text = candidate;
+    }
+    // Leave an overlong lead for editorial revision if it cannot be shortened
+    // without cutting a sentence or dropping below the validator's minimum.
+    return text.length >= 200 ? { ...block, text } : block;
   });
 }
 
