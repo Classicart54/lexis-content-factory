@@ -1,0 +1,49 @@
+{
+  "name": "lexis-content-pipeline-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "video:studio": "remotion studio src/video/index.ts",
+    "video:render": "remotion render src/video/index.ts ArticlePipelinePromo out/article-pipeline-promo.mp4",
+    "pipeline:local": "tsx src/core/run-local.ts",
+    "topic:local": "tsx src/core/run-topic-local.ts",
+    "from-facts:local": "tsx src/core/run-from-facts-local.ts",
+    "structure:local": "tsx src/core/run-structure-local.ts",
+    "writer:local": "tsx src/core/run-writer-local.ts",
+    "infographics:local": "tsx src/core/run-infographics-local.ts",
+    "assemble:local": "tsx src/core/run-assemble-local.ts",
+    "review:local": "tsx src/core/run-review-local.ts",
+    "revision-cycle:local": "tsx src/core/run-revision-cycle-local.ts",
+    "request:local": "tsx src/core/run-request-local.ts",
+    "daily:local": "tsx src/core/run-daily-topics-local.ts",
+    "reroute-review:local": "tsx src/core/run-reroute-review-local.ts",
+    "test": "node --import tsx --test src/**/*.test.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.507",
+    "@remotion/renderer": "^4.0.507",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.507",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

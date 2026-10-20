@@ -1,0 +1,4 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# 08:00 Moscow / 12:00 Novosibirsk / 05:00 UTC. Exactly one scheduler.
+0 5 * * * root flock -n /var/lock/lexis-content-pipeline-daily.lock bash -lc "cd /opt/lexis-content-pipeline && set -a && . /etc/lexis-content-pipeline.env && set +a && node dist/core/run-daily-topics-local.js 5 >> /var/log/lexis-content-pipeline-daily.log 2>&1"
