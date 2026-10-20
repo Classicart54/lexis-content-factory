@@ -28,3 +28,22 @@ test('request timeout remains active while reading the response body', async () 
     await assert.rejects(new NeuromediaClient({ apiKey: 'test', timeoutMs: 10 }).createJsonCompletion({ messages: [] }), /body timed out/);
   } finally { globalThis.fetch = original; }
 });
+
+test('repairs malformed model JSON once using the same model and preserves data', async () => {
+  const original = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.model, 'gpt-5.6-terra');
+    calls++;
+    if (calls === 2) {
+      assert.match(body.messages[0].content, /Repair JSON syntax only/);
+      assert.equal(body.tools, undefined);
+    }
+    return Response.json({ choices: [{ message: { content: calls === 1 ? '{"fact":"Quote "source""}' : '{"fact":"Quote \\"source\\""}' } }] });
+  };
+  try {
+    assert.deepEqual(await new NeuromediaClient({ apiKey: 'test' }).createJsonCompletion({ messages: [] }), { fact: 'Quote "source"' });
+    assert.equal(calls, 2);
+  } finally { globalThis.fetch = original; }
+});

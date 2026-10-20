@@ -38,6 +38,7 @@ export class NeuromediaWriterAgent {
             'FAQ must contain at least 8 questions and each answer must be longer than 80 characters, but answers should be compact.',
             'Use inline accents for scanability: **bold** for paragraph conclusions or checkable facts, ==marker== for the main takeaway. Hard rule: at least one accent per 250 words, minimum 4 total. Target 1-2 accents per section, never more than 3 per paragraph. Do not mark headings, lead or table cells.',
             'Return all requiredBlocks from the accepted MaterialStructure. If requiredBlocks contains tldr, include one tldr block near the top with concrete bullets/items, not generic prose.',
+            'For guide CTA use at most 24 words in total across heading, text and button label. Use a relevant product URL from project knowledge, never demo booking. Keep the CTA compact; do not repeat the article summary.',
             'Every block must include sourceClaimIds referencing existing FactPackage claims. CTA can use sourceClaimIds from product/method facts when relevant.',
             'For table or matrix blocks, return structured columns/head and rows/items. Never return a table as prose-only text.',
             'For cards blocks, use cards:[{title,text}], not items. A cards block without cards will render as an empty heading.',

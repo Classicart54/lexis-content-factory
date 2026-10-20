@@ -44,7 +44,7 @@ export class NeuromediaClient {
     throw lastError;
   }
 
-  private async requestJsonCompletion<T>(input: { messages: ChatMessage[]; useWebSearch?: boolean; temperature?: number }): Promise<T> {
+  private async requestJsonCompletion<T>(input: { messages: ChatMessage[]; useWebSearch?: boolean; temperature?: number }, allowRepair = true): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs || 120_000);
 
@@ -74,7 +74,15 @@ export class NeuromediaClient {
       const content = data.choices?.[0]?.message?.content;
       if (!content) throw new Error('Neuromedia API returned empty assistant content.');
 
-      return JSON.parse(content) as T;
+      try {
+        return JSON.parse(content) as T;
+      } catch (error) {
+        if (!allowRepair || !(error instanceof SyntaxError)) throw new Error('Neuromedia API returned invalid JSON.');
+        return await this.requestJsonCompletion<T>({ messages: [
+          { role: 'system', content: 'Repair JSON syntax only. Return the complete valid JSON object. Preserve all fields, text, sources, numbers and facts. Do not add content, omit sections or explain the repair. Escape quotation marks within strings.' },
+          { role: 'user', content },
+        ] }, false);
+      }
     } finally {
       clearTimeout(timeout);
     }
@@ -84,7 +92,7 @@ export class NeuromediaClient {
 function isRetriableNeuromediaError(error: unknown): boolean {
   if (error instanceof DOMException && error.name === 'AbortError') return true;
   const message = error instanceof Error ? error.message : String(error);
-  return /fetch failed|network|timeout|aborted|empty assistant content|Unexpected end of JSON|Neuromedia API error 5\d\d|Neuromedia API error 429/i.test(message);
+  return /fetch failed|network|timeout|aborted|empty assistant content|invalid JSON|Unexpected end of JSON|Neuromedia API error 5\d\d|Neuromedia API error 429/i.test(message);
 }
 
 function delay(ms: number): Promise<void> {

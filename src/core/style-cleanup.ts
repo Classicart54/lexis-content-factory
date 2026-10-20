@@ -20,8 +20,8 @@ function cleanupValue(value: unknown, key?: string): unknown {
 }
 
 export function cleanupContrasts(text: string): string {
+  // Keep negative clauses intact. Removing them with a regex can change facts
+  // and leave fragments that force the writer into endless revision cycles.
   return text
-    .replace(/(^|[\s(«"„])не\s+только\s+([^.!?;:]{1,90}?)\s*,?\s+но\s+и\s+/giu, '$1$2 и ')
-    .replace(/(^|[\s(«"„])не\s+просто\s+[^.!?;:]{1,90}?\s*,?\s+а\s+/giu, '$1')
-    .replace(/(^|[\s(«"„])не\s+[^.!?;:]{1,90}?\s*,?\s+а\s+/giu, '$1');
+    .replace(/(^|[\s(«"„])не\s+только\s+([^.!?;:]{1,90}?)\s*,?\s+но\s+и\s+/giu, '$1$2 и ');
 }

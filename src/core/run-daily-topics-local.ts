@@ -177,6 +177,7 @@ async function findExistingTopicRequest(topic: TopicQueueItem): Promise<Pipeline
 async function runUntilIdle(requestId: string, steps: number): Promise<PipelineRequest> {
   let current = await mustFindRequest(requestId);
   for (let step = 0; step < steps; step += 1) {
+    console.log(`[daily] ${new Date().toISOString()} ${current.id}: ${current.status}`);
     const next = await pipeline.runNext(current.id);
     if (next.status === current.status && next.updatedAt === current.updatedAt) return next;
     current = next;
